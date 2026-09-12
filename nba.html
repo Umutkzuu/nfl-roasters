@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026-27 NBA Sezonu — Güncel Kadrolar, Power Rankings ve Draft Hakları</title>
+<style>
+  :root{
+    --bg:#0b0e14; --card:#12161f; --card2:#171c27; --line:#242a38;
+    --text:#eef1f6; --sub:#9aa4b6; --east:#3b82f6; --west:#f97316;
+    --accent:#22c55e; --gold:#f59e0b; --purple:#a855f7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding:20px 14px 60px;
+  }
+  h1{font-size:1.35rem; text-align:center; margin:6px 0 2px;}
+  p.sub{text-align:center; color:var(--sub); font-size:.82rem; margin:0 0 16px; line-height:1.5;}
+
+  /* Tab Nav */
+  .tab-nav{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:24px;
+  }
+  .tab-btn{
+    background:var(--card); border:1px solid var(--line); color:var(--sub);
+    padding:8px 16px; border-radius:10px; font-weight:700; font-size:.82rem;
+    cursor:pointer; transition:.15s;
+  }
+  .tab-btn:hover{background:var(--card2); color:var(--text);}
+  .tab-btn.active{
+    background:#2563eb; color:#fff; border-color:#3b82f6;
+  }
+
+  .tab-pane{display:none;}
+  .tab-pane.active{display:block;}
+
+  .conf-title{
+    display:flex; align-items:center; gap:10px; margin:24px 0 14px;
+    font-size:1.05rem; font-weight:700;
+  }
+  .conf-title .dot{width:10px;height:10px;border-radius:50%;}
+  .conf-title.east .dot{background:var(--east);}
+  .conf-title.west .dot{background:var(--west);}
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr));
+    gap:10px;
+  }
+  .team{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:12px 6px 10px; text-align:center; cursor:pointer;
+    transition:transform .12s, border-color .12s, background .12s;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .team:active{transform:scale(.95);}
+  .team:hover{border-color:#3a4358; background:var(--card2);}
+  .team .name{font-size:.68rem; color:var(--sub); line-height:1.2; font-weight:600;}
+
+  /* Takım Rozetleri */
+  .team-badge{
+    width:44px; height:44px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:.82rem; letter-spacing:.05em;
+    margin-bottom:8px; border:1px solid rgba(255,255,255,.15);
+    box-shadow:0 4px 10px rgba(0,0,0,.35); flex-shrink:0;
+  }
+  .team-badge.sm{
+    width:24px; height:24px; border-radius:6px; font-size:.62rem; margin-bottom:0;
+  }
+  .team-badge.lg{
+    width:46px; height:46px; border-radius:13px; font-size:.92rem; margin-bottom:0;
+  }
+
+  /* Alt Filtre Butonları */
+  .sub-tabs{
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:16px 0 20px;
+  }
+  .sub-btn{
+    background:var(--card); border:1px solid var(--line); color:var(--sub);
+    padding:6px 14px; border-radius:8px; font-size:.76rem; font-weight:600;
+    cursor:pointer; transition:.15s;
+  }
+  .sub-btn:hover{color:var(--text);}
+  .sub-btn.active{
+    background:#1f2937; color:#38bdf8; border-color:#38bdf8;
+  }
+
+  .table-wrap{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    overflow:hidden; max-width:920px; margin:0 auto;
+  }
+  .rank-badge{
+    display:inline-flex; width:24px; height:24px; border-radius:6px;
+    align-items:center; justify-content:center; font-weight:800; font-size:.72rem;
+    background:#1f2937; color:var(--text);
+  }
+  .rank-badge.top3{background:var(--gold); color:#000;}
+  .flex-cell{display:flex; align-items:center; gap:8px;}
+
+  /* Draft Tablo Stilleri */
+  .draft-tag{
+    display:inline-block; font-size:.68rem; font-weight:700;
+    padding:2px 7px; border-radius:6px; margin:2px 2px 2px 0;
+  }
+  .tag-first{background:#1e3a8a; color:#93c5fd; border:1px solid #2563eb;}
+  .tag-swap{background:#581c87; color:#e9d5ff; border:1px solid #7e22ce;}
+  .draft-count{
+    font-size:.75rem; font-weight:800; color:var(--gold);
+  }
+
+  /* Modal Stilleri */
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.72);
+    z-index:50; padding:14px; overflow-y:auto;
+  }
+  .overlay.show{display:block;}
+  .modal{
+    max-width:700px; margin:20px auto 40px; background:var(--card);
+    border:1px solid var(--line); border-radius:16px; overflow:hidden;
+  }
+  .modal-head{
+    display:flex; align-items:center; gap:12px; padding:16px 16px 14px;
+    border-bottom:1px solid var(--line); position:sticky; top:0;
+    background:var(--card); z-index:2;
+  }
+  .modal-head .mh-text{flex:1;}
+  .modal-head h2{margin:0; font-size:1.05rem;}
+  .modal-head .cap{font-size:.72rem; color:var(--sub); margin-top:2px;}
+  .close-btn{
+    background:var(--card2); border:1px solid var(--line); color:var(--text);
+    width:32px; height:32px; border-radius:50%; font-size:1rem; cursor:pointer;
+    flex-shrink:0;
+  }
+  .section-label{
+    font-size:.7rem; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--sub); padding:14px 16px 6px; font-weight:700;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  table{width:100%; border-collapse:collapse; font-size:.82rem;}
+  thead th{
+    text-align:left; padding:8px 14px; color:var(--sub); font-weight:600;
+    font-size:.68rem; text-transform:uppercase; background:var(--card2);
+  }
+  tbody td{padding:9px 14px; border-top:1px solid var(--line); vertical-align:middle;}
+  tbody tr:hover{background:var(--card2);}
+  .pname{font-weight:600; display:flex; align-items:center; gap:6px;}
+  .ppos{color:var(--sub); font-size:.72rem;}
+  .tier{
+    font-size:.65rem; font-weight:700; padding:2px 6px; border-radius:6px;
+    display:inline-block;
+  }
+  .tier-c{background:#166534; color:#86efac;}
+  .tier-p{background:#1e40af; color:#93c5fd;}
+  .tier-b{background:#854d0e; color:#fde047;}
+  .badge{
+    display:inline-block; font-size:.62rem; padding:1px 6px; border-radius:6px;
+    background:#1f2937; color:#a5b4fc; font-weight:600;
+  }
+  .modal-draft-box{
+    padding:10px 16px 14px; border-top:1px solid var(--line);
+    font-size:.78rem; line-height:1.6;
+  }
+  .jersey-pill{
+    display:inline-block; font-size:.66rem; font-weight:700;
+    background:#1f2937; color:#38bdf8; padding:1px 5px; border-radius:4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>2026-27 NBA Takip Portali</h1>
+<p class="sub">ESPN Canlı Kadroları, Güç Sıralamaları ve Gelecek Draft Sermayesi</p>
+
+<!-- Sekme Seçimi -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchMainTab('rosters', this)">Takımlar & Güncel Kadrolar</button>
+  <button class="tab-btn" onclick="switchMainTab('rankings', this)">Power Rankings (Lig & Pozisyon)</button>
+  <button class="tab-btn" onclick="switchMainTab('draft', this)">Draft Hakları (2027–2031)</button>
+</div>
+
+<!-- SEKME 1: KADROLAR -->
+<div id="tab-rosters" class="tab-pane active">
+  <div class="conf-title east"><span class="dot"></span> Doğu Konferansı</div>
+  <div class="grid" id="east-grid"></div>
+
+  <div class="conf-title west"><span class="dot"></span> Batı Konferansı</div>
+  <div class="grid" id="west-grid"></div>
+</div>
+
+<!-- SEKME 2: POWER RANKINGS -->
+<div id="tab-rankings" class="tab-pane">
+  <div class="sub-tabs">
+    <button class="sub-btn active" onclick="switchRankSub('teams', this)">Takımlar Güç Sıralaması (30 Takım)</button>
+    <button class="sub-btn" onclick="switchRankSub('PG', this)">En İyi 12 PG (Oyun Kurucu)</button>
+    <button class="sub-btn" onclick="switchRankSub('SG', this)">En İyi 12 SG (Şutör Gard)</button>
+    <button class="sub-btn" onclick="switchRankSub('SF', this)">En İyi 12 SF (Kısa Forvet)</button>
+    <button class="sub-btn" onclick="switchRankSub('PF', this)">En İyi 12 PF (Uzun Forvet)</button>
+    <button class="sub-btn" onclick="switchRankSub('C', this)">En İyi 12 C (Pivot)</button>
+  </div>
+  <div class="table-wrap" id="rankings-container"></div>
+</div>
+
+<!-- SEKME 3: DRAFT HAKLARI -->
+<div id="tab-draft" class="tab-pane">
+  <div class="sub-tabs">
+    <button class="sub-btn active" onclick="filterDraftTable('all', this)">Tüm Takımlar (30 Takım)</button>
+    <button class="sub-btn" onclick="filterDraftTable('rich', this)">En Çok 1. Tur Hakkı Olanlar (5+ Pick)</button>
+    <button class="sub-btn" onclick="filterDraftTable('east', this)">Doğu Konferansı</button>
+    <button class="sub-btn" onclick="filterDraftTable('west', this)">Batı Konferansı</button>
+  </div>
+  <div class="table-wrap" id="draft-container"></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal" id="modal"></div>
+</div>
+
+<!-- Kazınan NBA Verisini Dahil Et -->
+<script src="nba_rosters.js"></script>
+
+<script>
+const TEAM_COLORS = {
+  atl:  { p:"#C8102E", s:"#FDB927", t:"#FFFFFF" },
+  bos:  { p:"#007A33", s:"#BA9653", t:"#FFFFFF" },
+  bkn:  { p:"#000000", s:"#707271", t:"#FFFFFF" },
+  cha:  { p:"#1D1160", s:"#00788C", t:"#FFFFFF" },
+  chi:  { p:"#CE1141", s:"#000000", t:"#FFFFFF" },
+  cle:  { p:"#860038", s:"#041E42", t:"#FDBB30" },
+  det:  { p:"#1D42BA", s:"#C8102E", t:"#FFFFFF" },
+  ind:  { p:"#002D62", s:"#FDBB30", t:"#FDBB30" },
+  mia:  { p:"#98002E", s:"#F9A01B", t:"#FFFFFF" },
+  mil:  { p:"#00471B", s:"#EEE1C6", t:"#EEE1C6" },
+  ny:   { p:"#006BB6", s:"#F58426", t:"#FFFFFF" },
+  orl:  { p:"#0077C0", s:"#C4CED4", t:"#FFFFFF" },
+  phi:  { p:"#006BB6", s:"#ED174C", t:"#FFFFFF" },
+  tor:  { p:"#CE1141", s:"#000000", t:"#FFFFFF" },
+  wsh:  { p:"#002B5C", s:"#E31837", t:"#FFFFFF" },
+  dal:  { p:"#00538C", s:"#002B5E", t:"#B8C4CA" },
+  den:  { p:"#0E2240", s:"#FEC524", t:"#FEC524" },
+  gs:   { p:"#1D428A", s:"#FFC72C", t:"#FFC72C" },
+  hou:  { p:"#CE1141", s:"#000000", t:"#FFFFFF" },
+  lac:  { p:"#C8102E", s:"#1D428A", t:"#FFFFFF" },
+  lal:  { p:"#552583", s:"#FDB927", t:"#FDB927" },
+  mem:  { p:"#5D76A9", s:"#12173F", t:"#F5B112" },
+  min:  { p:"#0C2340", s:"#236192", t:"#9EA2A2" },
+  no:   { p:"#0C2340", s:"#C8102E", t:"#85714D" },
+  okc:  { p:"#007AC1", s:"#EF3B24", t:"#FFFFFF" },
+  phx:  { p:"#1D1160", s:"#E56020", t:"#FFFFFF" },
+  por:  { p:"#E03A3E", s:"#000000", t:"#FFFFFF" },
+  sac:  { p:"#5A2D81", s:"#63727A", t:"#FFFFFF" },
+  sa:   { p:"#000000", s:"#C4CED4", t:"#FFFFFF" },
+  utah: { p:"#002B5C", s:"#00471B", t:"#F9A01B" }
+};
+
+const TEAMS_STRUCTURE = {
+  east: [
+    {abbr:"atl", name:"Atlanta Hawks"}, {abbr:"bos", name:"Boston Celtics"},
+    {abbr:"bkn", name:"Brooklyn Nets"},  {abbr:"cha", name:"Charlotte Hornets"},
+    {abbr:"chi", name:"Chicago Bulls"},  {abbr:"cle", name:"Cleveland Cavaliers"},
+    {abbr:"det", name:"Detroit Pistons"},{abbr:"ind", name:"Indiana Pacers"},
+    {abbr:"mia", name:"Miami Heat"},     {abbr:"mil", name:"Milwaukee Bucks"},
+    {abbr:"ny",  name:"New York Knicks"},{abbr:"orl", name:"Orlando Magic"},
+    {abbr:"phi", name:"Philadelphia 76ers"},{abbr:"tor", name:"Toronto Raptors"},
+    {abbr:"wsh", name:"Washington Wizards"}
+  ],
+  west: [
+    {abbr:"dal", name:"Dallas Mavericks"},  {abbr:"den", name:"Denver Nuggets"},
+    {abbr:"gs",  name:"Golden State Warriors"},{abbr:"hou", name:"Houston Rockets"},
+    {abbr:"lac", name:"LA Clippers"},       {abbr:"lal", name:"Los Angeles Lakers"},
+    {abbr:"mem", name:"Memphis Grizzlies"}, {abbr:"min", name:"Minnesota Timberwolves"},
+    {abbr:"no",  name:"New Orleans Pelicans"},{abbr:"okc", name:"Oklahoma City Thunder"},
+    {abbr:"phx", name:"Phoenix Suns"},      {abbr:"por", name:"Portland Trail Blazers"},
+    {abbr:"sac", name:"Sacramento Kings"},  {abbr:"sa",  name:"San Antonio Spurs"},
+    {abbr:"utah", name:"Utah Jazz"}
+  ]
+};
+
+const TEAM_DRAFT_ASSETS = {
+  okc: { totalFirsts: 11, totalSeconds: 8, summary: "Tarihin en geniş draft kasası. 2027-2031 arasında ligin en derin takas kozu.", picks: ["2027 1. Tur (Kendi veya DEN korumalı)", "2027 1. Tur (LAC Swap Hakkı)", "2028 1. Tur (Kendi)", "2028 1. Tur (DAL Swap)", "2029 1. Tur (Kendi + DEN korumalı)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  sa:  { totalFirsts: 9,  totalSeconds: 6, summary: "Wembanyama etrafına süperstar eklemek için Atlanta ve Chicago'dan gelen elit ilk turlar.", picks: ["2027 1. Tur (ATL - Korumasız)", "2027 1. Tur (Kendi)", "2028 1. Tur (BOS Swap)", "2029 1. Tur (Kendi)", "2030 1. Tur (DAL Swap)", "2031 1. Tur (MIN korumasız)"] },
+  bkn: { totalFirsts: 8,  totalSeconds: 7, summary: "Bridges ve Durant takaslarından dönen New York ve Phoenix korumasız seçimleri.", picks: ["2027 1. Tur (NYK - Korumasız)", "2027 1. Tur (PHX - Korumasız)", "2028 1. Tur (Kendi)", "2029 1. Tur (NYK)", "2029 1. Tur (PHX)", "2031 1. Tur (NYK)"] },
+  utah:{ totalFirsts: 8,  totalSeconds: 5, summary: "Gobert ve Mitchell takaslarından kalan devasa sermaye.", picks: ["2027 1. Tur (MIN - Korumasız)", "2027 1. Tur (CLE)", "2028 1. Tur (Kendi)", "2029 1. Tur (MIN/CLE)", "2031 1. Tur (Kendi)"] },
+  hou: { totalFirsts: 6,  totalSeconds: 6, summary: "Phoenix ve Brooklyn swap haklarıyla güçlendirilmiş esnek portföy.", picks: ["2027 1. Tur (BKN/PHX Swap)", "2028 1. Tur (Kendi)", "2029 1. Tur (PHX/DAL Swap)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  wsh: { totalFirsts: 6,  totalSeconds: 9, summary: "Yeniden yapılanma sürecinde toplanan çok sayıda 2. tur ve korumalı 1. turlar.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2030 1. Tur (GSW korumalı)", "2031 1. Tur (Kendi)"] },
+  orl: { totalFirsts: 5,  totalSeconds: 4, summary: "Kendi tüm ilk turları kontrol altında, Nuggets'tan gelen korumalı seçim mevcut.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  det: { totalFirsts: 5,  totalSeconds: 5, summary: "Kendi ilk turlarını elinde tutarak genç kadroyu drafttan besleme stratejisi.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  cha: { totalFirsts: 5,  totalSeconds: 6, summary: "Kendi draft haklarına sahip; ek olarak takaslardan kazanılan 2. turlar var.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  por: { totalFirsts: 5,  totalSeconds: 5, summary: "Dame ve Jrue takaslarından gelen Bucks ve Celtics gelecek hakları.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (MIL Swap)", "2029 1. Tur (BOS/MIL)", "2030 1. Tur (MIL Swap)", "2031 1. Tur (Kendi)"] },
+  mem: { totalFirsts: 5,  totalSeconds: 4, summary: "Kendi çekirdeğini koruyan standart ve temiz bir draft tablosu.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  tor: { totalFirsts: 5,  totalSeconds: 4, summary: "Tüm kendi ilk turlarını muhafaza ediyor.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  chi: { totalFirsts: 4,  totalSeconds: 3, summary: "2027 ilk turu San Antonio'ya borçlu (Top-10 korumalı).", picks: ["2027 1. Tur (SAS'a gidebilir - Top 10 korumalı)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  ind: { totalFirsts: 4,  totalSeconds: 3, summary: "Siakam takası sonrası toparlanma aşamasında, kendi haklarının çoğu mevcut.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  cle: { totalFirsts: 4,  totalSeconds: 2, summary: "2027 ve 2029 hakları Utah'a takas edilmişti; swap kısıtlamaları var.", picks: ["2027 1. Tur (UTA'ya devirli)", "2028 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  atl: { totalFirsts: 3,  totalSeconds: 4, summary: "2027 ilk tur hakkı tamamen San Antonio kontrolünde (Korumasız).", picks: ["2027 1. Tur (SAS'a devirli)", "2028 1. Tur (Kendi)", "2029 1. Tur (SAS Swap)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  mia: { totalFirsts: 4,  totalSeconds: 3, summary: "Korumalı seçim yükümlülükleri var ancak 2028 sonrası serbest.", picks: ["2027 1. Tur (Korumalı/OKC/CHA)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  gs:  { totalFirsts: 3,  totalSeconds: 2, summary: "2030 seçimi Washington'a korumalı olarak gönderilmiş durumda.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  bos: { totalFirsts: 3,  totalSeconds: 2, summary: "2028 ve 2029 yıllarında takas kısıtlamaları ve swap hakları mevcut.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (SAS Swap)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  dal: { totalFirsts: 3,  totalSeconds: 2, summary: "2027 ve 2029 yıllarında takas swapları bulunuyor.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (OKC Swap)", "2030 1. Tur (SAS Swap)", "2031 1. Tur (Kendi)"] },
+  sac: { totalFirsts: 4,  totalSeconds: 3, summary: "Kendi çekirdek haklarını büyük oranda korudu.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  no:  { totalFirsts: 4,  totalSeconds: 4, summary: "Lakers takasından kalan son haklar tamamlandı, kendi hakları duruyor.", picks: ["2027 1. Tur (Kendi)", "2028 1. Tur (Kendi)", "2029 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  phi: { totalFirsts: 3,  totalSeconds: 2, summary: "Gelecek ilk turlarının bir kısmı OKC ve BKN borçları nedeniyle kısıtlı.", picks: ["2027 1. Tur (BKN/OKC korumalı)", "2028 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  den: { totalFirsts: 2,  totalSeconds: 2, summary: "2027 ve 2029 seçimleri OKC ve Orlando'ya şartlı devirli.", picks: ["2027 1. Tur (OKC korumalı)", "2028 1. Tur (Kendi)", "2029 1. Tur (OKC korumalı)", "2031 1. Tur (Kendi)"] },
+  lal: { totalFirsts: 2,  totalSeconds: 2, summary: "Pelicans ve Jazz takasları sonrası 2027 ve 2029 hakları kısıtlı.", picks: ["2027 1. Tur (UTA korumalı)", "2028 1. Tur (Kendi)", "2030 1. Tur (Kendi)", "2031 1. Tur (Kendi)"] },
+  mil: { totalFirsts: 2,  totalSeconds: 1, summary: "Lillard takası nedeniyle 2028 ve 2030 Portland swap haklarına tabi.", picks: ["2027 1. Tur (NOP Swap)", "2028 1. Tur (POR Swap)", "2031 1. Tur (Kendi)"] },
+  min: { totalFirsts: 2,  totalSeconds: 1, summary: "Gobert takası yüzünden 2027 ve 2029 hakları tamamen Utah'a ait.", picks: ["2028 1. Tur (Kendi)", "2030 1. Tur (SAS Swap)", "2031 1. Tur (SAS'a devirli)"] },
+  ny:  { totalFirsts: 2,  totalSeconds: 3, summary: "Mikal Bridges ve KAT hamleleri için 2027, 2029 ve 2031 seçimleri Brooklyn'e gitti.", picks: ["2027 1. Tur (BKN'ye devirli)", "2028 1. Tur (Kendi)", "2030 1. Tur (Kendi)"] },
+  lac: { totalFirsts: 1,  totalSeconds: 1, summary: "Harden ve George takasları sonucu OKC ve Philly'e yüklü hak devretti.", picks: ["2027 1. Tur (OKC Swap)", "2028 1. Tur (PHI'ye devirli)", "2030 1. Tur (Kendi)"] },
+  phx: { totalFirsts: 1,  totalSeconds: 1, summary: "Ligin en kısıtlı draft tablosu. 2027 ve 2029 hakları Brooklyn ve Houston kontrolünde.", picks: ["2027 1. Tur (BKN'ye devirli)", "2028 1. Tur (BKN/HOU Swap)", "2029 1. Tur (BKN'ye devirli)", "2030 1. Tur (Kendi)"] }
+};
+
+const TEAM_POWER_RANKINGS = [
+  { rank:1, abbr:"sa", name:"San Antonio Spurs", conf:"Batı", tier:"Şampiyonluk Adayı", trend:"▲", note:"Wembanyama dönemi mutlak zirveye ulaştı, Fox ile kusursuz oyun aklı." },
+  { rank:2, abbr:"okc", name:"Oklahoma City Thunder", conf:"Batı", tier:"Şampiyonluk Adayı", trend:"—", note:"SGA liderliğinde ligin en dengeli hücum ve savunma sistemi." },
+  { rank:3, abbr:"ny", name:"New York Knicks", conf:"Doğu", tier:"Şampiyonluk Adayı", trend:"▲", note:"Brunson ve KAT omurgası, derin kanat savunmasıyla Doğu'nun zirvesinde." },
+  { rank:4, abbr:"phi", name:"Philadelphia 76ers", conf:"Doğu", tier:"Şampiyonluk Adayı", trend:"▲", note:"Embiid, Maxey ve LeBron ortaklığı ile tüm kozlar sahada." },
+  { rank:5, abbr:"bos", name:"Boston Celtics", conf:"Doğu", tier:"Şampiyonluk Adayı", trend:"▼", note:"Tatum & George ikilisi elit seviyede, ancak daralan rotasyon soru işareti." },
+  { rank:6, abbr:"min", name:"Minnesota Timberwolves", conf:"Batı", tier:"Playoff Tehdidi", trend:"—", note:"Anthony Edwards ligin en durdurulamaz iki yönlü skorerine dönüştü." },
+  { rank:7, abbr:"den", name:"Denver Nuggets", conf:"Batı", tier:"Playoff Tehdidi", trend:"▼", note:"Nikola Jokić tek başına hücum sistemi olmaya devam ediyor." },
+  { rank:8, abbr:"cle", name:"Cleveland Cavaliers", conf:"Doğu", tier:"Playoff Tehdidi", trend:"—", note:"Mobley ve Mitchell etrafındaki elit savunma kimliği sürüyor." },
+  { rank:9, abbr:"hou", name:"Houston Rockets", conf:"Batı", tier:"Playoff Tehdidi", trend:"▲", note:"Alperen Şengün ve KD birlikteliği yüksek hücum tavanı vadediyor." },
+  { rank:10, abbr:"orl", name:"Orlando Magic", conf:"Doğu", tier:"Playoff Tehdidi", trend:"▲", note:"Banchero, Franz Wagner ve Desmond Bane ile tam bir fizik gücü." },
+  { rank:11, abbr:"ind", name:"Indiana Pacers", conf:"Doğu", tier:"Playoff Tehdidi", trend:"—", note:"Haliburton ve Siakam'ın yüksek tempolu hücumu." },
+  { rank:12, abbr:"mia", name:"Miami Heat", conf:"Doğu", tier:"Playoff Tehdidi", trend:"▲", note:"Giannis Antetokounmpo & Bam Adebayo boyalı alan duvarı." },
+  { rank:13, abbr:"lal", name:"Los Angeles Lakers", conf:"Batı", tier:"Playoff Adayı", trend:"▲", note:"Luka Dončić'in heliosantrik oyunu ve Kessler'ın pota koruması." },
+  { rank:14, abbr:"dal", name:"Dallas Mavericks", conf:"Batı", tier:"Playoff Adayı", trend:"▼", note:"Kyrie Irving tecrübesi ve Cooper Flagg'in sansasyonel yükselişi." },
+  { rank:15, abbr:"gs", name:"Golden State Warriors", conf:"Batı", tier:"Play-In / Playoff", trend:"▼", note:"Curry'nin dış şut ustalığı ve Porziņģis'in stretch-5 katkısı." },
+  { rank:16, abbr:"det", name:"Detroit Pistons", conf:"Doğu", tier:"Play-In / Playoff", trend:"▲", note:"Cade Cunningham franchise lideri kimliğini perçinledi." },
+  { rank:17, abbr:"mem", name:"Memphis Grizzlies", conf:"Batı", tier:"Play-In / Playoff", trend:"—", note:"Ja Morant patlayıcılığı ve Zach Edey pota altı sertliği." },
+  { rank:18, abbr:"atl", name:"Atlanta Hawks", conf:"Doğu", tier:"Play-In / Playoff", trend:"—", note:"Jalen Johnson'ın all-around oyunu ve Dyson Daniels savunması." },
+  { rank:19, abbr:"no", name:"New Orleans Pelicans", conf:"Batı", tier:"Play-In / Playoff", trend:"—", note:"Zion Williamson ve Trey Murphy'nin hücum alanı." },
+  { rank:20, abbr:"phx", name:"Phoenix Suns", conf:"Batı", tier:"Play-In", trend:"▼", note:"Devin Booker'ın oyun kurucu rolündeki saf skorerliği." },
+  { rank:21, abbr:"lac", name:"LA Clippers", conf:"Batı", tier:"Play-In", trend:"▼", note:"Kawhi Leonard sağlıklı kaldığında elit; ancak yaş faktörü var." },
+  { rank:22, abbr:"sac", name:"Sacramento Kings", conf:"Batı", tier:"Play-In", trend:"▼", note:"Sabonis ve LaVine ikilisiyle ofansif bir hücum profili." },
+  { rank:23, abbr:"mil", name:"Milwaukee Bucks", conf:"Doğu", tier:"Yeniden Yapılanma", trend:"▼", note:"Tyler Herro ve Turner ile yeni döneme geçiş sancıları." },
+  { rank:24, abbr:"tor", name:"Toronto Raptors", conf:"Doğu", tier:"Yeniden Yapılanma", trend:"—", note:"Scottie Barnes & Ingram kanat tandemi." },
+  { rank:25, abbr:"por", name:"Portland Trail Blazers", conf:"Batı", tier:"Yeniden Yapılanma", trend:"▲", note:"Morant ve Clingan ile genç potansiyel inşası." },
+  { rank:26, abbr:"utah", name:"Utah Jazz", conf:"Batı", tier:"Yeniden Yapılanma", trend:"—", note:"Markkanen ve Jaren Jackson Jr. ön alanı." },
+  { rank:27, abbr:"cha", name:"Charlotte Hornets", conf:"Doğu", tier:"Yeniden Yapılanma", trend:"—", note:"Brandon Miller'ın hücum gelişimi." },
+  { rank:28, abbr:"chi", name:"Chicago Bulls", conf:"Doğu", tier:"Lotarya / İnşa", trend:"▼", note:"Giddey ve Buzelis çekirdeği." },
+  { rank:29, abbr:"bkn", name:"Brooklyn Nets", conf:"Doğu", tier:"Lotarya / İnşa", trend:"—", note:"Michael Porter Jr. ve Randle ile geçiş süreci." },
+  { rank:30, abbr:"wsh", name:"Washington Wizards", conf:"Doğu", tier:"Lotarya / İnşa", trend:"—", note:"AJ Dybantsa, Trae Young ve Sarr ile geleceğe yatırım." }
+];
+
+const POSITION_RANKINGS = {
+  PG: [
+    { rank:1, name:"Shai Gilgeous-Alexander", team:"Oklahoma City Thunder", abbr:"okc", meta:"MVP Adayı / Kusursuz Çift Yön" },
+    { rank:2, name:"Luka Dončić", team:"Los Angeles Lakers", abbr:"lal", meta:"Hücum Dehası / Triple-Double Canavarı" },
+    { rank:3, name:"Jalen Brunson", team:"New York Knicks", abbr:"ny", meta:"Playoff Lideri / Clutch Skoreri" },
+    { rank:4, name:"Stephen Curry", team:"Golden State Warriors", abbr:"gs", meta:"Tarihin En Büyük Alan Açan Şutörü" },
+    { rank:5, name:"Cade Cunningham", team:"Detroit Pistons", abbr:"det", meta:"Büyük Gard / Komple Saha Görüşü" },
+    { rank:6, name:"Tyrese Haliburton", team:"Indiana Pacers", abbr:"ind", meta:"Hızlı Hücum Ustası / Pas Vizyonu" },
+    { rank:7, name:"Tyrese Maxey", team:"Philadelphia 76ers", abbr:"phi", meta:"Patlayıcı İlk Adım & Hızlı Skor" },
+    { rank:8, name:"De'Aaron Fox", team:"San Antonio Spurs", abbr:"sa", meta:"Ligin En Hızlı Oyun Kurucusu" },
+    { rank:9, name:"Kyrie Irving", team:"Dallas Mavericks", abbr:"dal", meta:"Top Hakimiyeti & Saf Bitiricilik" },
+    { rank:10, name:"Trae Young", team:"Washington Wizards", abbr:"wsh", meta:"Derin Şut Tehdidi & P&R Maestro" },
+    { rank:11, name:"Ja Morant", team:"Portland Trail Blazers", abbr:"por", meta:"Akrobatik Atletizm & Çember Hücumu" },
+    { rank:12, name:"Jamal Murray", team:"Denver Nuggets", abbr:"den", meta:"İki Kişilik Oyun ve Playoff Skoru" }
+  ],
+  SG: [
+    { rank:1, name:"Anthony Edwards", team:"Minnesota Timberwolves", abbr:"min", meta:"Süperstar Patlayıcılık & Savunma" },
+    { rank:2, name:"Donovan Mitchell", team:"Cleveland Cavaliers", abbr:"cle", meta:"3 Seviyeli Elit Skorer" },
+    { rank:3, name:"Devin Booker", team:"Phoenix Suns", abbr:"phx", meta:"Kusursuz Orta Mesafe & Gard Aklı" },
+    { rank:4, name:"Desmond Bane", team:"Orlando Magic", abbr:"orl", meta:"Yüksek Hacimli Şutör & Savunma" },
+    { rank:5, name:"Derrick White", team:"Boston Celtics", abbr:"bos", meta:"Analitik Canavarı / Elit Defans" },
+    { rank:6, name:"Austin Reaves", team:"Los Angeles Lakers", abbr:"lal", meta:"İkincil Oyun Kurucu / Yaratıcı" },
+    { rank:7, name:"Dyson Daniels", team:"Atlanta Hawks", abbr:"atl", meta:"Perimetre Durdurucu & Hızlı Hücum" },
+    { rank:8, name:"Tyler Herro", team:"Milwaukee Bucks", abbr:"mil", meta:"Dinamik Perimetre Şutörü" },
+    { rank:9, name:"Amen Thompson", team:"Houston Rockets", abbr:"hou", meta:"Jenerasyonel Atletizm & Çok Yönlülük" },
+    { rank:10, name:"Stephon Castle", team:"San Antonio Spurs", abbr:"sa", meta:"Kilit Defansör & Fiziksel Baskı" },
+    { rank:11, name:"Brandin Podziemski", team:"Golden State Warriors", abbr:"gs", meta:"Ribaundcu Gard & Oyun Aklı" },
+    { rank:12, name:"Norman Powell", team:"Chicago Bulls", abbr:"chi", meta:"Saf Skorer & Verimli 3 Sayı" }
+  ],
+  SF: [
+    { rank:1, name:"Jayson Tatum", team:"Boston Celtics", abbr:"bos", meta:"Şampiyon İki Yönlü Süperstar Forvet" },
+    { rank:2, name:"Jaylen Brown", team:"Philadelphia 76ers", abbr:"phi", meta:"Fiziksel Kanat Gücü & Pota Hücumu" },
+    { rank:3, name:"Kawhi Leonard", team:"LA Clippers", abbr:"lac", meta:"Kusursuz İki Yönlü Playoff Aklı" },
+    { rank:4, name:"Franz Wagner", team:"Orlando Magic", abbr:"orl", meta:"Avrupa Ekolü Pasör & Delici Kanat" },
+    { rank:5, name:"Jalen Williams", team:"Oklahoma City Thunder", abbr:"okc", meta:"Modern NBA'in En Komple Kanadı" },
+    { rank:6, name:"Paul George", team:"Boston Celtics", abbr:"bos", meta:"Pürüzsüz Şut Mekaniği & Kanat Savunması" },
+    { rank:7, name:"Mikal Bridges", team:"New York Knicks", abbr:"ny", meta:"Demir Adam / Durdurucu Perimetre" },
+    { rank:8, name:"Brandon Miller", team:"Charlotte Hornets", abbr:"cha", meta:"Gelişen Süperstar Şutör Kanat" },
+    { rank:9, name:"Trey Murphy III", team:"New Orleans Pelicans", abbr:"no", meta:"Elit Stretch-Shooter & Açık Alan" },
+    { rank:10, name:"Cooper Flagg", team:"Dallas Mavericks", abbr:"dal", meta:"Sansasyonel Çaylak / Çok Yönlü Savunma" },
+    { rank:11, name:"Brandon Ingram", team:"Toronto Raptors", abbr:"tor", meta:"İzole Skor Tehdidi & Orta Mesafe" },
+    { rank:12, name:"Ausar Thompson", team:"Detroit Pistons", abbr:"det", meta:"Ligin En Elit Kanat Savunmacılarından" }
+  ],
+  PF: [
+    { rank:1, name:"Giannis Antetokounmpo", team:"Miami Heat", abbr:"mia", meta:"Durdurulamaz Pota Hücumu & DPOY Etkisi" },
+    { rank:2, name:"Kevin Durant", team:"Houston Rockets", abbr:"hou", meta:"Tarihin En Verimli Şutör Uzunu" },
+    { rank:3, name:"LeBron James", team:"Philadelphia 76ers", abbr:"phi", meta:"Tarihin En Büyük Basketbol Zekası" },
+    { rank:4, name:"Paolo Banchero", team:"Orlando Magic", abbr:"orl", meta:"Fiziksel Güç & Hücum Yaratıcılığı" },
+    { rank:5, name:"Evan Mobley", team:"Cleveland Cavaliers", abbr:"cle", meta:"DPOY Kalibresi Savunma & Mobilite" },
+    { rank:6, name:"Zion Williamson", team:"New Orleans Pelicans", abbr:"no", meta:"Pota Altı Ezici Gücü & Bitiricilik" },
+    { rank:7, name:"Pascal Siakam", team:"Indiana Pacers", abbr:"ind", meta:"Hızlı Hücum & İki Yönlü Denge" },
+    { rank:8, name:"Jalen Johnson", team:"Atlanta Hawks", abbr:"atl", meta:"Point-Forward / Ribaund & Geçiş Hücumu" },
+    { rank:9, name:"Jaren Jackson Jr.", team:"Utah Jazz", abbr:"utah", meta:"Elit Çember Koruma & Stretch Tehdidi" },
+    { rank:10, name:"OG Anunoby", team:"New York Knicks", abbr:"ny", meta:"Ligin En Sert Perimetre/Forvet Savunmacısı" },
+    { rank:11, name:"Scottie Barnes", team:"Toronto Raptors", abbr:"tor", meta:"Saha Görüşü & Savunma Çeşitliliği" },
+    { rank:12, name:"Draymond Green", team:"Golden State Warriors", abbr:"gs", meta:"Savunma Koordinatörü & Saha Lideri" }
+  ],
+  C: [
+    { rank:1, name:"Nikola Jokić", team:"Denver Nuggets", abbr:"den", meta:"Ligin En İyi Hücum Mimarı & Çoklu MVP" },
+    { rank:2, name:"Victor Wembanyama", team:"San Antonio Spurs", abbr:"sa", meta:"Tarihin En Eşsiz İki Yönlü Yeteneği" },
+    { rank:3, name:"Joel Embiid", team:"Philadelphia 76ers", abbr:"phi", meta:"Boyalı Alan Hakimi & Orta Mesafe Canavarı" },
+    { rank:4, name:"Anthony Davis", team:"Washington Wizards", abbr:"wsh", meta:"Elit Çember Savunması & Boyalı Alan Skoru" },
+    { rank:5, name:"Karl-Anthony Towns", team:"New York Knicks", abbr:"ny", meta:"Tarihin En Şutör Pivotu / Alan Açıcı" },
+    { rank:6, name:"Alperen Şengün", team:"Houston Rockets", abbr:"hou", meta:"Pivot Oyun Kurucu / Post-Up Virtüözü" },
+    { rank:7, name:"Bam Adebayo", team:"Miami Heat", abbr:"mia", meta:"Tüm Pozisyonları Savunan Mobil Çıpa" },
+    { rank:8, name:"Chet Holmgren", team:"Oklahoma City Thunder", abbr:"okc", meta:"Elit Blok Tehdidi & Modern Dış Şut" },
+    { rank:9, name:"Domantas Sabonis", team:"Sacramento Kings", abbr:"sac", meta:"Triple-Double Makinesi & Elit Ribaundcu" },
+    { rank:10, name:"Rudy Gobert", team:"Minnesota Timberwolves", abbr:"min", meta:"4 Kez DPOY / Boyalı Alan Kalkanı" },
+    { rank:11, name:"Kristaps Porziņģis", team:"Golden State Warriors", abbr:"gs", meta:"7-Foot-3 Stretch-5 & Blok Tehdidi" },
+    { rank:12, name:"Jarrett Allen", team:"Cleveland Cavaliers", abbr:"cle", meta:"Lob Tehdidi, Enerji & Çember Güvenliği" }
+  ]
+};
+
+function renderBadge(abbr, size="normal"){
+  const c = TEAM_COLORS[abbr] || { p:"#242a38", s:"#3a4358", t:"#ffffff" };
+  const sizeClass = size==="large" ? "team-badge lg" : (size==="small" ? "team-badge sm" : "team-badge");
+  return `
+    <div class="${sizeClass}" style="background: linear-gradient(135deg, ${c.p} 0%, ${c.s} 100%); color: ${c.t};">
+      ${abbr.toUpperCase()}
+    </div>
+  `;
+}
+
+function switchMainTab(tabId, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`tab-${tabId}`).classList.add('active');
+  if(tabId==='rankings') renderTeamRankings();
+  if(tabId==='draft') renderDraftTable('all');
+}
+
+function switchRankSub(type, btn){
+  document.querySelectorAll('#tab-rankings .sub-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(type==='teams') renderTeamRankings();
+  else renderPositionRankings(type);
+}
+
+function renderTeamRankings(){
+  const container = document.getElementById('rankings-container');
+  const rows = TEAM_POWER_RANKINGS.map(t=>{
+    const tierClass = t.tier.includes('Şampiyonluk') ? 'tier-c' : (t.tier.includes('Playoff') ? 'tier-p' : 'tier-b');
+    return `
+      <tr>
+        <td style="width:50px; text-align:center;">
+          <span class="rank-badge ${t.rank<=3?'top3':''}">${t.rank}</span>
+        </td>
+        <td>
+          <div class="flex-cell">
+            ${renderBadge(t.abbr, 'small')}
+            <span class="pname">${t.name}</span>
+            <span style="font-size:.7rem; color:var(--sub);">(${t.conf})</span>
+          </div>
+        </td>
+        <td><span class="tier ${tierClass}">${t.tier}</span></td>
+        <td style="font-size:.75rem; color:var(--sub);">${t.note}</td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:center;">Sıra</th>
+          <th>Takım</th>
+          <th>Statü</th>
+          <th>Analiz & Beklenti</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function renderPositionRankings(posKey){
+  const list = POSITION_RANKINGS[posKey];
+  const container = document.getElementById('rankings-container');
+  const posNames = { PG:"Point Guard (Oyun Kurucu)", SG:"Shooting Guard (Şutör Gard)", SF:"Small Forward (Kısa Forvet)", PF:"Power Forward (Uzun Forvet)", C:"Center (Pivot)" };
+  
+  const rows = list.map(p=>`
+    <tr>
+      <td style="width:50px; text-align:center;">
+        <span class="rank-badge ${p.rank<=3?'top3':''}">${p.rank}</span>
+      </td>
+      <td>
+        <div class="pname">${p.name}</div>
+        <div class="ppos">${posNames[posKey]}</div>
+      </td>
+      <td>
+        <div class="flex-cell">
+          ${renderBadge(p.abbr, 'small')}
+          <span style="font-size:.78rem; font-weight:600;">${p.team}</span>
+        </div>
+      </td>
+      <td style="font-size:.75rem; color:var(--sub);">${p.meta}</td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:center;">Sıra</th>
+          <th>Oyuncu</th>
+          <th>Takım</th>
+          <th>Oyuncu Profili / Güçlü Yön</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function filterDraftTable(filterType, btn){
+  document.querySelectorAll('#tab-draft .sub-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDraftTable(filterType);
+}
+
+function renderDraftTable(filter='all'){
+  const container = document.getElementById('draft-container');
+  const allTeams = [...TEAMS_STRUCTURE.east.map(t=>({...t, conf:"Doğu"})), ...TEAMS_STRUCTURE.west.map(t=>({...t, conf:"Batı"}))];
+  
+  let list = allTeams.map(t=>{
+    const d = TEAM_DRAFT_ASSETS[t.abbr] || { totalFirsts:0, totalSeconds:0, summary:"—", picks:[] };
+    return { ...t, ...d };
+  });
+
+  if(filter==='rich') list = list.filter(t=>t.totalFirsts>=5);
+  if(filter==='east') list = list.filter(t=>t.conf==='Doğu');
+  if(filter==='west') list = list.filter(t=>t.conf==='Batı');
+
+  list.sort((a,b)=>b.totalFirsts - a.totalFirsts);
+
+  const rows = list.map((t, idx)=>`
+    <tr>
+      <td style="width:40px; text-align:center;">
+        <span class="rank-badge">${idx+1}</span>
+      </td>
+      <td>
+        <div class="flex-cell">
+          ${renderBadge(t.abbr, 'small')}
+          <div>
+            <div class="pname">${t.name}</div>
+            <div style="font-size:.68rem; color:var(--sub);">${t.conf}</div>
+          </div>
+        </div>
+      </td>
+      <td style="text-align:center;">
+        <span class="draft-count">${t.totalFirsts}</span>
+        <div style="font-size:.65rem; color:var(--sub);">${t.totalSeconds} Adet 2. Tur</div>
+      </td>
+      <td>
+        <div style="margin-bottom:4px;">
+          ${t.picks.map(p=>`<span class="draft-tag ${p.includes('Swap')?'tag-swap':'tag-first'}">${p}</span>`).join('')}
+        </div>
+        <div style="font-size:.7rem; color:var(--sub);">${t.summary}</div>
+      </td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:center;">#</th>
+          <th>Takım</th>
+          <th style="text-align:center;">1. Tur Hakkı</th>
+          <th>Gelecek Draft Detayları & Haklar (2027–2031)</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function buildGrid(list, containerId){
+  const el = document.getElementById(containerId);
+  list.forEach(t=>{
+    const div = document.createElement('div');
+    div.className='team';
+    div.onclick=()=>openModal(t);
+    div.innerHTML = `
+      ${renderBadge(t.abbr)}
+      <div class="name">${t.name}</div>
+    `;
+    el.appendChild(div);
+  });
+}
+buildGrid(TEAMS_STRUCTURE.east,'east-grid');
+buildGrid(TEAMS_STRUCTURE.west,'west-grid');
+
+function renderLiveRosterRows(players){
+  if(!players || players.length === 0){
+    return `<tr><td colspan="3" style="color:var(--sub); text-align:center; padding:12px;">Kadro verisi bulunamadı.</td></tr>`;
+  }
+  return players.map(p=>`
+    <tr>
+      <td>
+        <div class="pname">
+          ${p.jersey && p.jersey !== '--' ? `<span class="jersey-pill">#${p.jersey}</span>` : ''}
+          ${p.n}
+        </div>
+        <div class="ppos">Pozisyon: <b>${p.p}</b></div>
+      </td>
+      <td style="color:var(--sub); font-size:.74rem;">
+        ${p.height} · ${p.weight}
+      </td>
+      <td style="color:var(--sub); font-size:.74rem; text-align:right;">
+        ${p.experience > 0 ? `${p.experience} Yıl` : 'Çaylak (R)'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModal(t){
+  const modal = document.getElementById('modal');
+  const d = TEAM_DRAFT_ASSETS[t.abbr] || { totalFirsts:0, totalSeconds:0, summary:"Bilgi yok", picks:[] };
+  
+  // ESPN'den çekilen canlı kadroyu al
+  const liveData = typeof NBA_ROSTER_DATA !== 'undefined' ? NBA_ROSTER_DATA[t.abbr] : null;
+  const players = liveData?.roster || [];
+
+  modal.innerHTML = `
+    <div class="modal-head">
+      ${renderBadge(t.abbr, 'large')}
+      <div class="mh-text">
+        <h2>${t.name}</h2>
+        <div class="cap">Aktif Kadro: <b>${players.length} Oyuncu</b> · Toplam 1. Tur Hakkı: <b>${d.totalFirsts}</b></div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    
+    <div class="section-label">Gelecek Draft Sermayesi (2027–2031) <span class="badge" style="background:#2563eb; color:#fff;">Draft Assets</span></div>
+    <div class="modal-draft-box">
+      <div style="margin-bottom:6px;">
+        ${d.picks.map(p=>`<span class="draft-tag ${p.includes('Swap')?'tag-swap':'tag-first'}">${p}</span>`).join('')}
+      </div>
+      <div style="color:var(--sub); font-size:.73rem;">${d.summary} (Ayrıca ${d.totalSeconds} adet 2. tur seçimi).</div>
+    </div>
+
+    <div class="section-label">Güncel Aktif Kadro <span class="badge">ESPN Live Roster</span></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Oyuncu</th>
+          <th>Fizik (Boy / Kilo)</th>
+          <th style="text-align:right;">Deneyim</th>
+        </tr>
+      </thead>
+      <tbody>${renderLiveRosterRows(players)}</tbody>
+    </table>
+  `;
+  document.getElementById('overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('show');
+  document.body.style.overflow='';
+}
+</script>
+</body>
+</html>
