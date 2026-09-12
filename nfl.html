@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFL Portali — Güncel Kadrolar ve Power Rankings</title>
+<style>
+  :root{
+    --bg:#0b0e14; --card:#12161f; --card2:#171c27; --line:#242a38;
+    --text:#eef1f6; --sub:#9aa4b6; --afc:#ef4444; --nfc:#3b82f6;
+    --accent:#10b981; --gold:#f59e0b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding:20px 14px 60px;
+  }
+  h1{font-size:1.45rem; text-align:center; margin:6px 0 2px; letter-spacing:-.02em;}
+  p.sub{text-align:center; color:var(--sub); font-size:.84rem; margin:0 0 20px; line-height:1.5;}
+
+  /* Tab Butonları */
+  .tab-nav{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:24px;
+  }
+  .tab-btn{
+    background:var(--card); border:1px solid var(--line); color:var(--sub);
+    padding:8px 18px; border-radius:10px; font-weight:700; font-size:.84rem;
+    cursor:pointer; transition:.15s;
+  }
+  .tab-btn:hover{background:var(--card2); color:var(--text);}
+  .tab-btn.active{
+    background:#2563eb; color:#fff; border-color:#3b82f6;
+  }
+
+  .tab-pane{display:none;}
+  .tab-pane.active{display:block;}
+
+  .conf-title{
+    display:flex; align-items:center; gap:10px; margin:24px 0 14px;
+    font-size:1.15rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em;
+  }
+  .conf-title .dot{width:12px; height:12px; border-radius:50%;}
+  .conf-title.afc .dot{background:var(--afc); box-shadow:0 0 10px rgba(239,68,68,.5);}
+  .conf-title.nfc .dot{background:var(--nfc); box-shadow:0 0 10px rgba(59,130,246,.5);}
+  
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(105px,1fr));
+    gap:10px; margin-bottom:28px;
+  }
+  .team{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:12px 6px 10px; text-align:center; cursor:pointer;
+    transition:transform .12s, border-color .12s, background .12s;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .team:active{transform:scale(.96);}
+  .team:hover{border-color:#3a4358; background:var(--card2);}
+  .team .name{font-size:.7rem; color:var(--sub); line-height:1.25; font-weight:600;}
+
+  /* Takım Rozetleri */
+  .team-badge{
+    width:46px; height:46px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:.82rem; letter-spacing:.05em;
+    margin-bottom:8px; border:1px solid rgba(255,255,255,.15);
+    box-shadow:0 4px 10px rgba(0,0,0,.35); flex-shrink:0;
+  }
+  .team-badge.sm{
+    width:26px; height:26px; border-radius:7px; font-size:.64rem; margin-bottom:0;
+  }
+  .team-badge.lg{
+    width:52px; height:52px; border-radius:14px; font-size:1rem; margin-bottom:0;
+  }
+
+  /* Alt Filtre Butonları */
+  .sub-tabs{
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:16px 0 20px;
+  }
+  .sub-btn{
+    background:var(--card); border:1px solid var(--line); color:var(--sub);
+    padding:7px 16px; border-radius:8px; font-size:.78rem; font-weight:600;
+    cursor:pointer; transition:.15s;
+  }
+  .sub-btn:hover{color:var(--text);}
+  .sub-btn.active{
+    background:#1f2937; color:#38bdf8; border-color:#38bdf8;
+  }
+
+  .table-wrap{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    overflow:hidden; max-width:960px; margin:0 auto;
+  }
+  table{width:100%; border-collapse:collapse; font-size:.84rem;}
+  thead th{
+    text-align:left; padding:9px 14px; color:var(--sub); font-weight:600;
+    font-size:.7rem; text-transform:uppercase; background:var(--card2);
+  }
+  tbody td{padding:10px 14px; border-top:1px solid var(--line); vertical-align:middle;}
+  tbody tr:hover{background:var(--card2);}
+  
+  .rank-badge{
+    display:inline-flex; width:24px; height:24px; border-radius:6px;
+    align-items:center; justify-content:center; font-weight:800; font-size:.74rem;
+    background:#1f2937; color:var(--text);
+  }
+  .rank-badge.top3{background:var(--gold); color:#000;}
+  .flex-cell{display:flex; align-items:center; gap:9px;}
+  .pname{font-weight:600;}
+  .ppos{color:var(--sub); font-size:.74rem; margin-top:1px;}
+
+  .tier{
+    font-size:.66rem; font-weight:700; padding:2px 7px; border-radius:6px;
+    display:inline-block;
+  }
+  .tier-c{background:#166534; color:#86efac;}
+  .tier-p{background:#1e40af; color:#93c5fd;}
+  .tier-b{background:#854d0e; color:#fde047;}
+
+  /* Modal Stilleri */
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
+    z-index:50; padding:14px; overflow-y:auto;
+  }
+  .overlay.show{display:block;}
+  .modal{
+    max-width:760px; margin:20px auto 50px; background:var(--card);
+    border:1px solid var(--line); border-radius:18px; overflow:hidden;
+  }
+  .modal-head{
+    display:flex; align-items:center; gap:14px; padding:16px 18px;
+    border-bottom:1px solid var(--line); position:sticky; top:0;
+    background:var(--card); z-index:2;
+  }
+  .modal-head .mh-text{flex:1;}
+  .modal-head h2{margin:0; font-size:1.15rem;}
+  .modal-head .cap{font-size:.75rem; color:var(--sub); margin-top:3px;}
+  .close-btn{
+    background:var(--card2); border:1px solid var(--line); color:var(--text);
+    width:34px; height:34px; border-radius:50%; font-size:1.1rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .section-label{
+    font-size:.74rem; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--sub); padding:14px 18px 8px; font-weight:800;
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(255,255,255,.02);
+  }
+  .badge{
+    display:inline-block; font-size:.65rem; padding:2px 7px; border-radius:6px;
+    font-weight:700;
+  }
+  .badge-offense{background:#991b1b; color:#fecaca;}
+  .badge-defense{background:#1e40af; color:#bfdbfe;}
+  .badge-st{background:#065f46; color:#a7f3d0;}
+  .jersey-pill{
+    display:inline-block; font-size:.68rem; font-weight:700;
+    background:#1f2937; color:#38bdf8; padding:2px 6px; border-radius:4px; margin-right:6px;
+  }
+</style>
+</head>
+<body>
+
+<h1>NFL Takip Portali</h1>
+<p class="sub">ESPN Canlı Kadroları (Ofans, Defans, Özel Takım) ve Güç Sıralamaları</p>
+
+<!-- Sekmeler -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchMainTab('rosters', this)">Takımlar & Kadrolar (32 Takım)</button>
+  <button class="tab-btn" onclick="switchMainTab('rankings', this)">Power Rankings (Lig & Pozisyonlar)</button>
+</div>
+
+<!-- SEKME 1: KADROLAR -->
+<div id="tab-rosters" class="tab-pane active">
+  <div class="conf-title afc"><span class="dot"></span> AFC (American Football Conference)</div>
+  <div class="grid" id="afc-grid"></div>
+
+  <div class="conf-title nfc"><span class="dot"></span> NFC (National Football Conference)</div>
+  <div class="grid" id="nfc-grid"></div>
+</div>
+
+<!-- SEKME 2: POWER RANKINGS -->
+<div id="tab-rankings" class="tab-pane">
+  <div class="sub-tabs">
+    <button class="sub-btn active" onclick="switchRankSub('teams', this)">Takımlar Güç Sıralaması (32 Takım)</button>
+    <button class="sub-btn" onclick="switchRankSub('QB', this)">En İyi 12 QB (Oyun Kurucu)</button>
+    <button class="sub-btn" onclick="switchRankSub('RB', this)">En İyi 12 RB (Koşucu)</button>
+    <button class="sub-btn" onclick="switchRankSub('DEF', this)">En İyi 12 Defans Oyuncusu</button>
+  </div>
+  <div class="table-wrap" id="rankings-container"></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal" id="modal"></div>
+</div>
+
+<!-- Kazınan JSON verisini yükle -->
+<script src="rosters.js"></script>
+
+<script>
+// NFL Takım Renkleri
+const TEAM_COLORS = {
+  buf: { p:"#00338D", s:"#C60C30", t:"#FFFFFF" },
+  mia: { p:"#008E97", s:"#FC4C02", t:"#FFFFFF" },
+  ne:  { p:"#002244", s:"#C60C30", t:"#FFFFFF" },
+  nyj: { p:"#125740", s:"#000000", t:"#FFFFFF" },
+  bal: { p:"#241773", s:"#9E7C0C", t:"#FFFFFF" },
+  cin: { p:"#FB4F14", s:"#000000", t:"#FFFFFF" },
+  cle: { p:"#311D00", s:"#FF3C00", t:"#FFFFFF" },
+  pit: { p:"#101820", s:"#FFB612", t:"#FFB612" },
+  hou: { p:"#03202F", s:"#A71930", t:"#FFFFFF" },
+  ind: { p:"#002C5F", s:"#A2AAAD", t:"#FFFFFF" },
+  jax: { p:"#006778", s:"#D7A22A", t:"#FFFFFF" },
+  ten: { p:"#0C2340", s:"#4B92DB", t:"#FFFFFF" },
+  den: { p:"#FB4F14", s:"#002244", t:"#FFFFFF" },
+  kc:  { p:"#E31837", s:"#FFB81C", t:"#FFFFFF" },
+  lv:  { p:"#000000", s:"#A5ACAF", t:"#FFFFFF" },
+  lac: { p:"#0080C6", s:"#FFC20E", t:"#FFFFFF" },
+
+  dal: { p:"#003594", s:"#041E42", t:"#FFFFFF" },
+  nyg: { p:"#0B2265", s:"#A71930", t:"#FFFFFF" },
+  phi: { p:"#004C54", s:"#A5ACAF", t:"#FFFFFF" },
+  was: { p:"#5A1414", s:"#FFB612", t:"#FFB612" },
+  wsh: { p:"#5A1414", s:"#FFB612", t:"#FFB612" },
+  chi: { p:"#0B162A", s:"#C83803", t:"#FFFFFF" },
+  det: { p:"#0076B6", s:"#B0B7BC", t:"#FFFFFF" },
+  gb:  { p:"#203731", s:"#FFB612", t:"#FFB612" },
+  min: { p:"#4F2683", s:"#FFC62F", t:"#FFFFFF" },
+  atl: { p:"#A71930", s:"#000000", t:"#FFFFFF" },
+  car: { p:"#0085CA", s:"#101820", t:"#FFFFFF" },
+  no:  { p:"#D3BC8D", s:"#101820", t:"#101820" },
+  tb:  { p:"#D50A0A", s:"#0A0A08", t:"#FFFFFF" },
+  ari: { p:"#97233F", s:"#000000", t:"#FFFFFF" },
+  lar: { p:"#003594", s:"#FFA300", t:"#FFA300" },
+  sf:  { p:"#AA0000", s:"#B3995D", t:"#FFFFFF" },
+  sea: { p:"#002244", s:"#69BE28", t:"#FFFFFF" }
+};
+
+// 32 Takım Sabit Yapısı
+const NFL_STRUCTURE = {
+  afc: [
+    { abbr:"buf", name:"Buffalo Bills", div:"AFC East" },
+    { abbr:"mia", name:"Miami Dolphins", div:"AFC East" },
+    { abbr:"ne",  name:"New England Patriots", div:"AFC East" },
+    { abbr:"nyj", name:"New York Jets", div:"AFC East" },
+    { abbr:"bal", name:"Baltimore Ravens", div:"AFC North" },
+    { abbr:"cin", name:"Cincinnati Bengals", div:"AFC North" },
+    { abbr:"cle", name:"Cleveland Browns", div:"AFC North" },
+    { abbr:"pit", name:"Pittsburgh Steelers", div:"AFC North" },
+    { abbr:"hou", name:"Houston Texans", div:"AFC South" },
+    { abbr:"ind", name:"Indianapolis Colts", div:"AFC South" },
+    { abbr:"jax", name:"Jacksonville Jaguars", div:"AFC South" },
+    { abbr:"ten", name:"Tennessee Titans", div:"AFC South" },
+    { abbr:"den", name:"Denver Broncos", div:"AFC West" },
+    { abbr:"kc",  name:"Kansas City Chiefs", div:"AFC West" },
+    { abbr:"lv",  name:"Las Vegas Raiders", div:"AFC West" },
+    { abbr:"lac", name:"Los Angeles Chargers", div:"AFC West" }
+  ],
+  nfc: [
+    { abbr:"dal", name:"Dallas Cowboys", div:"NFC East" },
+    { abbr:"nyg", name:"New York Giants", div:"NFC East" },
+    { abbr:"phi", name:"Philadelphia Eagles", div:"NFC East" },
+    { abbr:"wsh", name:"Washington Commanders", div:"NFC East" },
+    { abbr:"chi", name:"Chicago Bears", div:"NFC North" },
+    { abbr:"det", name:"Detroit Lions", div:"NFC North" },
+    { abbr:"gb",  name:"Green Bay Packers", div:"NFC North" },
+    { abbr:"min", name:"Minnesota Vikings", div:"NFC North" },
+    { abbr:"atl", name:"Atlanta Falcons", div:"NFC South" },
+    { abbr:"car", name:"Carolina Panthers", div:"NFC South" },
+    { abbr:"no",  name:"New Orleans Saints", div:"NFC South" },
+    { abbr:"tb",  name:"Tampa Bay Buccaneers", div:"NFC South" },
+    { abbr:"ari", name:"Arizona Cardinals", div:"NFC West" },
+    { abbr:"lar", name:"Los Angeles Rams", div:"NFC West" },
+    { abbr:"sf",  name:"San Francisco 49ers", div:"NFC West" },
+    { abbr:"sea", name:"Seattle Seahawks", div:"NFC West" }
+  ]
+};
+
+// Power Rankings
+const TEAM_POWER_RANKINGS = [
+  { rank:1, abbr:"det", name:"Detroit Lions", conf:"NFC", tier:"Süper Kase Favorisi", note:"Ligin en kusursuz hücum hattı, Gibbs & Montgomery ikilisi ve elit savunma." },
+  { rank:2, abbr:"kc", name:"Kansas City Chiefs", conf:"AFC", tier:"Süper Kase Favorisi", note:"Mahomes & Reid dehası ve Chris Jones liderliğindeki şampiyon savunma omurgası." },
+  { rank:3, abbr:"bal", name:"Baltimore Ravens", conf:"AFC", tier:"Süper Kase Favorisi", note:"Lamar Jackson & Derrick Henry ikilisinin durdurulamaz yer hücumu." },
+  { rank:4, abbr:"buf", name:"Buffalo Bills", conf:"AFC", tier:"Süper Kase Favorisi", note:"Josh Allen MVP kalibresinde oynuyor, dengeli ve hatasız hücum yapısı." },
+  { rank:5, abbr:"phi", name:"Philadelphia Eagles", conf:"NFC", tier:"Süper Kase Favorisi", note:"Saquon Barkley'nin inanılmaz katkısı ve gençleşen elit savunma." },
+  { rank:6, abbr:"min", name:"Minnesota Vikings", conf:"NFC", tier:"Playoff Tehdidi", note:"Flores'in dahi blitz savunması ve Justin Jefferson'ın sahadaki dominasyonu." },
+  { rank:7, abbr:"gb", name:"Green Bay Packers", conf:"NFC", tier:"Playoff Tehdidi", note:"Jordan Love ve genç yetenekli alıcılar; Xavier McKinney savunmada devleşiyor." },
+  { rank:8, abbr:"wsh", name:"Washington Commanders", conf:"NFC", tier:"Playoff Tehdidi", note:"Jayden Daniels franchise'ı tamamen dönüştürdü; ligin en heyecan verici takımı." },
+  { rank:9, abbr:"pit", name:"Pittsburgh Steelers", conf:"AFC", tier:"Playoff Tehdidi", note:"T.J. Watt liderliğinde ligin en sert savunması ve dengeli hücum." },
+  { rank:10, abbr:"hou", name:"Houston Texans", conf:"AFC", tier:"Playoff Tehdidi", note:"C.J. Stroud liderliği ve Will Anderson & Hunter ikilisinin kenar baskısı." },
+  { rank:11, abbr:"lac", name:"LA Chargers", conf:"AFC", tier:"Playoff Tehdidi", note:"Jim Harbaugh kültürü oturdu; Herbert'ın kolu ve fiziksel savunma." },
+  { rank:12, abbr:"ari", name:"Arizona Cardinals", conf:"NFC", tier:"Playoff Adayı", note:"Kyler Murray, James Conner ve Trey McBride ile tavanı çok yüksek bir hücum." },
+  { rank:13, abbr:"sf", name:"San Francisco 49ers", conf:"NFC", tier:"Playoff Adayı", note:"Sakatlıklarla boğuşsalar da Purdy, Kittle ve Fred Warner ile tehlikeliler." },
+  { rank:14, abbr:"den", name:"Denver Broncos", conf:"AFC", tier:"Playoff Adayı", note:"Vance Joseph'in sert savunması, Surtain II kilidi ve Bo Nix'in gelişimi." },
+  { rank:15, abbr:"lar", name:"Los Angeles Rams", conf:"NFC", tier:"Playoff Adayı", note:"Stafford, Kupp ve Puka Nacua bir aradayken her takımı yenebilecek güçteler." },
+  { rank:16, abbr:"atl", name:"Atlanta Falcons", conf:"NFC", tier:"Play-In / Sınır", note:"Bijan Robinson ve Drake London gibi genç yıldızlarla NFC South mücadelesindeler." },
+  { rank:17, abbr:"cin", name:"Cincinnati Bengals", conf:"AFC", tier:"Play-In / Sınır", note:"Burrow & Chase ikilisi harikalar yaratıyor ancak savunma aksıyor." },
+  { rank:18, abbr:"tb", name:"Tampa Bay Buccaneers", conf:"NFC", tier:"Play-In / Sınır", note:"Baker Mayfield liderliğinde yüksek skorlu maçlar ve Mike Evans faktörü." },
+  { rank:19, abbr:"sea", name:"Seattle Seahawks", conf:"NFC", tier:"Play-In / Sınır", note:"Geno Smith ve patlayıcı silahlar; Macdonald savunmayı oturtmaya çalışıyor." },
+  { rank:20, abbr:"chi", name:"Chicago Bears", conf:"NFC", tier:"Gelişme Aşamasında", note:"Elit bir savunma var ancak hücum hattı Caleb Williams'ı korumakta zorlanıyor." },
+  { rank:21, abbr:"mia", name:"Miami Dolphins", conf:"AFC", tier:"Gelişme Aşamasında", note:"Tua sahadayken patlayıcılar fakat fiziksel soğuk hava maçlarında düşüyorlar." },
+  { rank:22, abbr:"ind", name:"Indianapolis Colts", conf:"AFC", tier:"Gelişme Aşamasında", note:"Jonathan Taylor harika koşuyor; pas oyununda istikrar aranıyor." },
+  { rank:23, abbr:"nyj", name:"New York Jets", conf:"AFC", tier:"Hayal Kırıklığı", note:"Kağıt üstündeki devasa yıldız kadrosuna rağmen saha içi kimya oturmadı." },
+  { rank:24, abbr:"dal", name:"Dallas Cowboys", conf:"NFC", tier:"Hayal Kırıklığı", note:"CeeDee ve Micah Parsons dışında koşu oyunu ve savunma derinliği çöktü." },
+  { rank:25, abbr:"no", name:"New Orleans Saints", conf:"NFC", tier:"Geçiş Dönemi", note:"Kamara'nın çabası yetersiz kalıyor; sakatlıklar ve daralan kadro tavanı." },
+  { rank:26, abbr:"cle", name:"Cleveland Browns", conf:"AFC", tier:"Yeniden İnşa", note:"Myles Garrett tek başına savunuyor; ofansif oyun kurucu krizi sürüyor." },
+  { rank:27, abbr:"jax", name:"Jacksonville Jaguars", conf:"AFC", tier:"Yeniden İnşa", note:"Trevor Lawrence dönemi kritik eşikte; savunma arka alanı çok açık veriyor." },
+  { rank:28, abbr:"ne", name:"New England Patriots", conf:"AFC", tier:"Yeniden İnşa", note:"Drake Maye büyük bir umut ışığı saçıyor ancak yetenek çevresi çok zayıf." },
+  { rank:29, abbr:"car", name:"Carolina Panthers", conf:"NFC", tier:"Yeniden İnşa", note:"Bryce Young toparlanma sinyalleri veriyor, yol uzun." },
+  { rank:30, abbr:"lv", name:"Las Vegas Raiders", conf:"AFC", tier:"Yeniden İnşa", note:"Maxx Crosby ve Brock Bowers parlıyor fakat QB boşluğu can yakıyor." },
+  { rank:31, abbr:"nyg", name:"New York Giants", conf:"NFC", tier:"Yeniden İnşa", note:"Malik Nabers ve Dexter Lawrence elit; genel hücum üretkenliği lig dibinde." },
+  { rank:32, abbr:"ten", name:"Tennessee Titans", conf:"AFC", tier:"Yeniden İnşa", note:"Top kayıpları ve ofansif kurgu hatalarıyla ligin dibindeler." }
+];
+
+const POSITION_RANKINGS = {
+  QB: [
+    { rank:1, name:"Patrick Mahomes", team:"Kansas City Chiefs", abbr:"kc", meta:"3x Super Bowl MVP / Ligin Altın Standardı" },
+    { rank:2, name:"Lamar Jackson", team:"Baltimore Ravens", abbr:"bal", meta:"2x MVP / Eşi Benzeri Olmayan Çift Tehdit" },
+    { rank:3, name:"Josh Allen", team:"Buffalo Bills", abbr:"buf", meta:"Fiziksel Güç, Dev Kol ve Touchdown Makinesi" },
+    { rank:4, name:"Joe Burrow", team:"Cincinnati Bengals", abbr:"cin", meta:"Cerrahi İsabet / Kusursuz Cep Lideri" },
+    { rank:5, name:"Jared Goff", team:"Detroit Lions", abbr:"det", meta:"Ligin En Verimli ve Soğukkanlı Dağıtıcısı" },
+    { rank:6, name:"Jayden Daniels", team:"Washington Commanders", abbr:"wsh", meta:"Tarihi Çaylak Sezonu / Elektrikli Oyun Aklı" },
+    { rank:7, name:"Jalen Hurts", team:"Philadelphia Eagles", abbr:"phi", meta:"Kazanma Karakteri / Güçlü Koşucu & Pasör" },
+    { rank:8, name:"C.J. Stroud", team:"Houston Texans", abbr:"hou", meta:"Genç Yaşta Elit Saha Görüşü ve Liderlik" },
+    { rank:9, name:"Jordan Love", team:"Green Bay Packers", abbr:"gb", meta:"Korkusuz Pasör / Büyük Oyun Üreticisi" },
+    { rank:10, name:"Justin Herbert", team:"LA Chargers", abbr:"lac", meta:"Kusursuz Kol Gücü ve Fiziksel Yetenek" },
+    { rank:11, name:"Baker Mayfield", team:"Tampa Bay Buccaneers", abbr:"tb", meta:"Yüksek Pas Sayıları & Savaşçı Ruh" },
+    { rank:12, name:"Brock Purdy", team:"San Francisco 49ers", abbr:"sf", meta:"Anticipation ve Sistem Yöneticisi Dehası" }
+  ],
+  RB: [
+    { rank:1, name:"Saquon Barkley", team:"Philadelphia Eagles", abbr:"phi", meta:"Durdurulamaz Patlayıcılık & MVP Formu" },
+    { rank:2, name:"Derrick Henry", team:"Baltimore Ravens", abbr:"bal", meta:"Efsane King Henry / Ezici Fiziksel Canavar" },
+    { rank:3, name:"Christian McCaffrey", team:"San Francisco 49ers", abbr:"sf", meta:"Tarihin En Komple Koşu & Pas Tehdidi" },
+    { rank:4, name:"Jahmyr Gibbs", team:"Detroit Lions", abbr:"det", meta:"Açık Alanda Elektrikli Hız ve Yaratıcılık" },
+    { rank:5, name:"Bijan Robinson", team:"Atlanta Falcons", abbr:"atl", meta:"Jenerasyonel Ayak Hareketi & Komple Silah" },
+    { rank:6, name:"Josh Jacobs", team:"Green Bay Packers", abbr:"gb", meta:"Temas Sonrası Ekstra Yard Canavarı" },
+    { rank:7, name:"Kyren Williams", team:"Los Angeles Rams", abbr:"lar", meta:"Kusursuz Görüş & Red Zone Bitiriciliği" },
+    { rank:8, name:"Jonathan Taylor", team:"Indianapolis Colts", abbr:"ind", meta:"Saf Hız ve İkinci Seviye Patlayıcılığı" },
+    { rank:9, name:"James Cook", team:"Buffalo Bills", abbr:"buf", meta:"Dinamik Pas Yakalama & Açık Alan Çevikliği" },
+    { rank:10, name:"David Montgomery", team:"Detroit Lions", abbr:"det", meta:"Ligin En Zor Düşürülen Fiziksel Tank Koşucusu" },
+    { rank:11, name:"De'Von Achane", team:"Miami Dolphins", abbr:"mia", meta:"Tarihi Yard/Taşıma Ortalaması & Saf Roket" },
+    { rank:12, name:"Bucky Irving", team:"Tampa Bay Buccaneers", abbr:"tb", meta:"Ligin En Zor Yakalanan Çevik Çaylağı" }
+  ],
+  DEF: [
+    { rank:1, name:"T.J. Watt", team:"Pittsburgh Steelers", abbr:"pit", meta:"EDGE / Her Maç Top Çalan Oyun Bozucu" },
+    { rank:2, name:"Myles Garrett", team:"Cleveland Browns", abbr:"cle", meta:"DE / Durdurulamaz Atletizm & Pass Rush Ustası" },
+    { rank:3, name:"Fred Warner", team:"San Francisco 49ers", abbr:"sf", meta:"LB / Ligin Tartışmasız En İyi Saha Komutanı" },
+    { rank:4, name:"Patrick Surtain II", team:"Denver Broncos", abbr:"den", meta:"CB / #1 Numaralı Alıcıları Tamamen Silen Ada" },
+    { rank:5, name:"Micah Parsons", team:"Dallas Cowboys", abbr:"dal", meta:"EDGE / Her Pozisyondan Saldıran Hız Şeytanı" },
+    { rank:6, name:"Chris Jones", team:"Kansas City Chiefs", abbr:"kc", meta:"DT / En Kritik Anlarda Maç Kazandıran İç Baskı" },
+    { rank:7, name:"Dexter Lawrence", team:"New York Giants", abbr:"nyg", meta:"DT / Çift Kişiyi Ezen Ligin En Yıkıcı Burun Tackle'ı" },
+    { rank:8, name:"Kyle Hamilton", team:"Baltimore Ravens", abbr:"bal", meta:"S / Tüm Sahayı Kapsayan Hibrit Deha" },
+    { rank:9, name:"Aidan Hutchinson", team:"Detroit Lions", abbr:"det", meta:"EDGE / Sürekli Baskı Kuran Motor & Yıkıcı Güç" },
+    { rank:10, name:"Xavier McKinney", team:"Green Bay Packers", abbr:"gb", meta:"S / Ligin En Elit Hava Sahası Top Hırsızı" },
+    { rank:11, name:"Roquan Smith", team:"Baltimore Ravens", abbr:"bal", meta:"LB / Çizgiden Çizgiye Sertlik & Liderlik" },
+    { rank:12, name:"Brian Branch", team:"Detroit Lions", abbr:"det", meta:"S/CB / Hem Kutuda Hem Havada Elit Çift Yön" }
+  ]
+};
+
+function renderBadge(abbr, size="normal"){
+  const c = TEAM_COLORS[abbr] || { p:"#242a38", s:"#3a4358", t:"#ffffff" };
+  const sizeClass = size==="large" ? "team-badge lg" : (size==="small" ? "team-badge sm" : "team-badge");
+  return `
+    <div class="${sizeClass}" style="background: linear-gradient(135deg, ${c.p} 0%, ${c.s} 100%); color: ${c.t};">
+      ${abbr.toUpperCase()}
+    </div>
+  `;
+}
+
+function switchMainTab(tabId, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`tab-${tabId}`).classList.add('active');
+  if(tabId==='rankings') renderTeamRankings();
+}
+
+function switchRankSub(type, btn){
+  document.querySelectorAll('#tab-rankings .sub-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(type==='teams') renderTeamRankings();
+  else renderPositionRankings(type);
+}
+
+function renderTeamRankings(){
+  const container = document.getElementById('rankings-container');
+  const rows = TEAM_POWER_RANKINGS.map(t=>{
+    const tierClass = t.tier.includes('Favorisi') ? 'tier-c' : (t.tier.includes('Tehdidi') ? 'tier-p' : 'tier-b');
+    return `
+      <tr>
+        <td style="width:50px; text-align:center;">
+          <span class="rank-badge ${t.rank<=3?'top3':''}">${t.rank}</span>
+        </td>
+        <td>
+          <div class="flex-cell">
+            ${renderBadge(t.abbr, 'small')}
+            <span class="pname">${t.name}</span>
+            <span style="font-size:.7rem; color:var(--sub);">(${t.conf})</span>
+          </div>
+        </td>
+        <td><span class="tier ${tierClass}">${t.tier}</span></td>
+        <td style="font-size:.76rem; color:var(--sub);">${t.note}</td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:center;">Sıra</th>
+          <th>Takım</th>
+          <th>Seviye / Statü</th>
+          <th>Genel Analiz & Görünüm</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function renderPositionRankings(posKey){
+  const list = POSITION_RANKINGS[posKey];
+  const container = document.getElementById('rankings-container');
+  const titles = {
+    QB: "Quarterback (Oyun Kurucu)",
+    RB: "Running Back (Koşucu)",
+    DEF: "En İyi Defans Oyuncuları (EDGE / DT / LB / CB / S)"
+  };
+  
+  const rows = list.map(p=>`
+    <tr>
+      <td style="width:50px; text-align:center;">
+        <span class="rank-badge ${p.rank<=3?'top3':''}">${p.rank}</span>
+      </td>
+      <td>
+        <div class="pname">${p.name}</div>
+        <div class="ppos">${titles[posKey]}</div>
+      </td>
+      <td>
+        <div class="flex-cell">
+          ${renderBadge(p.abbr, 'small')}
+          <span style="font-size:.78rem; font-weight:600;">${p.team}</span>
+        </div>
+      </td>
+      <td style="font-size:.76rem; color:var(--sub);">${p.meta}</td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:center;">Sıra</th>
+          <th>Oyuncu</th>
+          <th>Takım</th>
+          <th>Oyun Stili / Nitelik</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function buildGrid(list, containerId){
+  const el = document.getElementById(containerId);
+  list.forEach(t=>{
+    const div = document.createElement('div');
+    div.className='team';
+    div.onclick=()=>openModal(t);
+    div.innerHTML = `
+      ${renderBadge(t.abbr)}
+      <div class="name">${t.name}</div>
+    `;
+    el.appendChild(div);
+  });
+}
+buildGrid(NFL_STRUCTURE.afc,'afc-grid');
+buildGrid(NFL_STRUCTURE.nfc,'nfc-grid');
+
+function makeRosterRows(players){
+  if(!players || players.length === 0){
+    return `<tr><td colspan="2" style="color:var(--sub); text-align:center; padding:12px;">Kadro verisi bulunamadı.</td></tr>`;
+  }
+  return players.map(p=>`
+    <tr>
+      <td>
+        <div class="pname">
+          ${p.jersey && p.jersey !== '--' ? `<span class="jersey-pill">#${p.jersey}</span>` : ''}
+          ${p.n}
+        </div>
+        <div class="ppos">Pozisyon: <b>${p.p}</b></div>
+      </td>
+      <td style="color:var(--sub); font-size:.78rem; text-align:right;">
+        ${p.experience > 0 ? `${p.experience} Yıl Deneyim` : 'Çaylak (Rookie)'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openModal(t){
+  const modal = document.getElementById('modal');
+  
+  // Kazınan JSON'dan takımı çek
+  const rawData = typeof NFL_ROSTER_DATA !== 'undefined' ? (NFL_ROSTER_DATA[t.abbr] || NFL_ROSTER_DATA[t.abbr === 'wsh' ? 'was' : t.abbr]) : null;
+  
+  const offense = rawData?.offense || [];
+  const defense = rawData?.defense || [];
+  const special = rawData?.special || [];
+
+  modal.innerHTML = `
+    <div class="modal-head">
+      ${renderBadge(t.abbr, 'large')}
+      <div class="mh-text">
+        <h2>${t.name}</h2>
+        <div class="cap">Divizyon: <b>${t.div}</b> · Toplam Kadro: <b>${offense.length + defense.length + special.length} Oyuncu</b></div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    
+    <!-- 1. KADRO: OFANS -->
+    <div class="section-label">
+      1. Ofans Kadrosu (${offense.length} Oyuncu)
+      <span class="badge badge-offense">Hücum</span>
+    </div>
+    <table>
+      <thead><tr><th>Oyuncu</th><th style="text-align:right;">Deneyim</th></tr></thead>
+      <tbody>${makeRosterRows(offense)}</tbody>
+    </table>
+
+    <!-- 2. KADRO: DEFANS -->
+    <div class="section-label">
+      2. Defans Kadrosu (${defense.length} Oyuncu)
+      <span class="badge badge-defense">Savunma</span>
+    </div>
+    <table>
+      <thead><tr><th>Oyuncu</th><th style="text-align:right;">Deneyim</th></tr></thead>
+      <tbody>${makeRosterRows(defense)}</tbody>
+    </table>
+
+    <!-- 3. KADRO: ÖZEL TAKIM -->
+    <div class="section-label">
+      3. Özel Takım (${special.length} Oyuncu)
+      <span class="badge badge-st">Special Teams</span>
+    </div>
+    <table>
+      <thead><tr><th>Oyuncu</th><th style="text-align:right;">Deneyim</th></tr></thead>
+      <tbody>${makeRosterRows(special)}</tbody>
+    </table>
+  `;
+  document.getElementById('overlay').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('show');
+  document.body.style.overflow='';
+}
+</script>
+</body>
+</html>
